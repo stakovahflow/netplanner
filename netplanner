@@ -526,7 +526,7 @@ def new_interface(interface, interfaces):
 def main():
     try:
         # Parse command line arguments
-        parser = argparse.ArgumentParser(description="Create or append to a CSV file with base64-encoded credentials.")
+        parser = argparse.ArgumentParser(description="A tool for managing basic Netplan configurations for Ubuntu")
         parser.add_argument("-V", "--version", action="store_true", help="Show version information and exit")
         parser.add_argument("-v", "--view", action="store_true", help="View network configuration(s)")
         parser.add_argument("-l", "--list", action="store_true", help="List available network interfaces")
