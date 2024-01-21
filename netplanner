@@ -29,6 +29,7 @@ if os.geteuid() != 0:
 #########################################################################
 ### Here we go with some functions:
 #########################################################################
+
 # Configure logging
 def setup_logging():
     log_format = '%(asctime)s - %(levelname)s - %(message)s'
@@ -53,11 +54,12 @@ def setup_logging():
 # Call the function to set up logging at the start of your script
 setup_logging()
 
-
+# Basic timestamp, formatted: 2024-01-21_17-45-51
 def timestamp():
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     return timestamp
 
+# Create a tarball of the current netplan configuration:
 def backup_interface_configurations():
     filename = f'/var/log/netplan-backup-{timestamp()}.tgz'
     logging.info(f'Backing up {config_dir} to {filename}')
@@ -72,6 +74,7 @@ def backup_interface_configurations():
     for line in status_lines:
         logging.debug(line)
 
+# Restore configuration from tarball to the /etc/netplan directory:
 def restore_interface_configuration(filename):
     logging.info(f'Attempting to restore files from backup {filename}:')
     logging.debug(f'Removing current configuration files from {config_dir}')
@@ -92,19 +95,22 @@ def restore_interface_configuration(filename):
     for line in status_lines:
         logging.debug(line)
 
-
+# Get a list of network interfaces
 def get_interfaces():
     try:
         result = subprocess.run(['ip', '-br', 'addr'], capture_output=True, text=True, check=True)
         interfaces = result.stdout.splitlines()
-        return [line.split()[0] for line in interfaces if not line.startswith("lo") and not line.startswith("docker")]
+        return [line.split()[0] for line in interfaces if not line.startswith("lo") 
+                and not line.startswith("docker") 
+                and not line.startswith("veth")]
     except subprocess.CalledProcessError as e:
-        logging.error(f"Error getting interfaces: {e}")
+        logging.error(f"Error getting interfaces (1): {e}")
         return []
     except Exception as e:
-        logging.error(f"Error getting interfaces: {e}")
+        logging.error(f"Error getting interfaces (2): {e}")
         return []
 
+# Display current interface configuration:
 def show_current_config(iface):
     try:
         result = subprocess.run(['ip', 'addr', 'show', iface], capture_output=True, text=True, check=True)
@@ -112,6 +118,7 @@ def show_current_config(iface):
     except subprocess.CalledProcessError as e:
         logging.error(f"Error showing current configuration for {iface}: {e}")
 
+# Validate IP address network mask (CIDR):
 def validate_ip_cidr(ip_cidr):
     try:
         ipaddress.IPv4Interface(ip_cidr)
@@ -121,6 +128,7 @@ def validate_ip_cidr(ip_cidr):
         logging.error(f'Interface CIDR: Invalid')
         return False
 
+# Validate IP address:
 def validate_ip(ip):
     try:
         ipaddress.IPv4Address(ip)
