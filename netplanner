@@ -197,9 +197,6 @@ def get_network_details(interfaces,interface=None):
                 while True:
                     logging.debug(f"Getting IP address for interface {iface} from stdin")
                     ip = input("Enter the IP address (e.g., 192.168.1.10): ")
-                    if not validate_ip(ip):
-                        logging.error("Invalid IP address. Please try again.")
-                        continue
                     print(cidr_examples)
                     prefix_length = input("Enter the network prefix length (/24, 24): ").strip()
                     if prefix_length.startswith("/"):
