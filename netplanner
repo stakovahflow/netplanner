@@ -226,12 +226,13 @@ def get_network_details(interfaces,interface=None):
 
                 while True:
                     dns_input = input("Enter DNS addresses (comma-separated, hit enter if none): ")
-                    for dns_addr in dns_input.split(','):
-                        if not validate_ip(dns_addr):
-                            logging.error(f'Invalid DNS address defined: {dns_addr}')
+                    # dns = [dns.strip() for dns in dns_input.split(',') if validate_ip(dns.strip())]
+                    for dns in dns_input.split(','):
+                        if not validate_ip(dns):
+                            logging.error(f'Invalid DNS address defined: {dns}')
                             break
                         else:
-                            dns = [dns.strip() for dns in dns_input.split(',') if validate_ip(dns.strip())]
+                            dns = [dns.strip() for dns in dns_input.split(',')]
                 return iface, config_type, ip_cidr, gateway, dns, mtu
             else:
                 return iface, config_type, None, None, None, mtu
