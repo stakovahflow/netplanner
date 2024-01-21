@@ -232,7 +232,7 @@ def get_network_details(interfaces,interface=None):
                             logging.debug(f'DNS address valid: {dns}')
                         else:
                             logging.error(f'Invalid DNS address defined: {dns.strip()}')
-                            continue
+                            break
                     dns = [dns.strip() for dns in dns_input.split(',')]
                 return iface, config_type, ip_cidr, gateway, dns, mtu
             else:
