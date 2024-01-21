@@ -233,7 +233,8 @@ def get_network_details(interfaces,interface=None):
                             break
                         else:
                             logging.debug(f'DNS address valid: {dns}')
-                    dns = [dns.strip() for dns in dns_input.split(',') if validate_ip(dns.strip())]
+                    dns = [dns.strip() for dns in dns_input.split(',')]
+                    # dns = [dns.strip() for dns in dns_input.split(',') if validate_ip(dns.strip())]
                 return iface, config_type, ip_cidr, gateway, dns, mtu
             else:
                 return iface, config_type, None, None, None, mtu
