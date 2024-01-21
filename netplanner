@@ -228,7 +228,7 @@ def get_network_details(interfaces,interface=None):
                 for dns_addr in dns_input.split(','):
                     if not validate_ip(dns_addr):
                         logging.error(f'Invalid DNS address defined: {dns_addr}')
-                        continue
+                        break
                 dns = [dns.strip() for dns in dns_input.split(',') if validate_ip(dns.strip())]
                 
                 return iface, config_type, ip_cidr, gateway, dns, mtu
