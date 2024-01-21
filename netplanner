@@ -226,7 +226,7 @@ def get_network_details(interfaces,interface=None):
 
                 dns_input = input("Enter DNS addresses (comma-separated, hit enter if none): ")
                 while True:
-                    if dns.strip() == '':
+                    if dns_input.strip() == '':
                         break
                     else:
                         for dns in dns_input.split(','):
