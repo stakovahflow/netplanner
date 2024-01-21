@@ -235,6 +235,7 @@ def get_network_details(interfaces,interface=None):
                                 continue
                             else:
                                 break
+                        break
                 dns = [dns.strip() for dns in dns_input.split(',')]
                     # dns = [dns.strip() for dns in dns_input.split(',') if validate_ip(dns.strip())]
                 
