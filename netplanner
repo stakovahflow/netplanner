@@ -132,10 +132,10 @@ def validate_ip_cidr(ip_cidr):
 def validate_ip(ip):
     try:
         ipaddress.IPv4Address(ip)
-        logging.debug(f'IP Address: Valid')
+        logging.debug(f'IP Address {ip}: Valid')
         return True
     except ipaddress.AddressValueError:
-        logging.error(f'IP Address: Invalid')
+        logging.error(f'IP Address {ip}: Invalid')
         return False
 
 # Pretty much as it sounds, we're getting the interface details for the specified interface, validated per list of currently used interface names
@@ -224,8 +224,23 @@ def get_network_details(interfaces,interface=None):
                     else:
                         break
 
-                dns_input = input("Enter DNS addresses (comma-separated, hit enter if none): ")
-                dns = [dns.strip() for dns in dns_input.split(',') if validate_ip(dns.strip())]
+                # dns_input = input("Enter DNS addresses (comma-separated, hit enter if none): ")
+                # dns = [dns.strip() for dns in dns_input.split(',') if validate_ip(dns.strip())]
+                
+                dns = []
+                while True:
+                    dns_input = input("Enter DNS addresses (comma-separated, hit enter if none or done): ")
+                    if dns_input.lower() in ['done', '']:
+                        break
+                    else:
+                        # Split the input and validate each IP address
+                        ips = [ip.strip() for ip in dns_input.split(',')]
+                        valid_ips = [ip for ip in ips if validate_ip(ip)]
+                        if valid_ips:
+                            dns.extend(valid_ips)
+                        else:
+                            logging.error("Invalid IP address(es) detected.")
+                        loggging.error(f"Current valid DNS IPs: {dns}")
                 
                 return iface, config_type, ip_cidr, gateway, dns, mtu
             else:
