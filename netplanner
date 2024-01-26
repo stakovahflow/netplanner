@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Last modified: 2024-01-25
-version = 20240125001
+version = 20240125009
 import subprocess
 import ipaddress
 import os
@@ -135,7 +135,7 @@ def validate_ip(ip):
         logging.debug(f'IP Address {ip}: Valid')
         return True
     except ipaddress.AddressValueError:
-        logging.error(f'IP Address {ip}: Invalid')
+        logging.error(f'IP Address {ip}: INVALID')
         return False
 
 # Pretty much as it sounds, we're getting the interface details for the specified interface, validated per list of currently used interface names
@@ -227,21 +227,25 @@ def get_network_details(interfaces,interface=None):
                 # dns_input = input("Enter DNS addresses (comma-separated, hit enter if none): ")
                 # dns = [dns.strip() for dns in dns_input.split(',') if validate_ip(dns.strip())]
                 
-                dns = []
                 while True:
                     dns_input = input("Enter DNS addresses (comma-separated, hit enter if none or done): ")
-                    if dns_input.lower() in ['done', '']:
+                    if dns_input.lower().strip() in ['done', '']:
                         break
                     else:
+                        ips = []
+                        dns = []
                         # Split the input and validate each IP address
-                        ips = [ip.strip() for ip in dns_input.split(',')]
-                        valid_ips = [ip for ip in ips if validate_ip(ip)]
-                        if valid_ips:
-                            dns.extend(valid_ips)
-                        else:
-                            logging.error("Invalid IP address(es) detected.")
-                        logging.error(f"Current valid DNS IPs: {dns}")
-                
+                        for ip in dns_input.split(','):
+                            ips.append(ip.strip())
+                        for ip in ips:
+                            if validate_ip(ip):
+                                dns.append(ip)
+                            else:
+                                logging.debug('Restarting DNS entry prompt')
+                                continue
+                        logging.info(f"Current valid DNS IPs: {dns}")
+                        if ips == dns:
+                            break
                 return iface, config_type, ip_cidr, gateway, dns, mtu
             else:
                 return iface, config_type, None, None, None, mtu
