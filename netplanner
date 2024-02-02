@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# Last modified: 2024-01-25
-version = 20240125009
+# Last modified: 2024-02-01
+version = 20240201001
 import subprocess
 import ipaddress
 import os
@@ -406,6 +406,20 @@ def list_files_with_interface(interface_name):
     
     return matching_files
 
+# Apply the configuration 
+def apply_configuration(interface, config=None):
+    config_path = f"{config_dir}/{interface}.yaml"
+    if not config == None:
+        with open(config_path, "w") as file:
+            file.write(config)
+    if not remove_interface_all_configs(interface):
+        print(f"No existing configuration found for {interface}. Proceeding with new configuration.")
+    try:
+        subprocess.run(["netplan", "try"], check=True)
+        subprocess.run(["netplan", "apply"], check=True)
+    except Exception as e:
+        logging.error(f"An error occurred while applying the configuration: {e}")
+
 # Display all configuration data within a specific file:
 def display_config(config, filename):
     # Display the interface configuration
@@ -478,7 +492,7 @@ def clean_up_conflicts(conflicts):
                     new_interface(interface, interfaces)
                 elif clean_up_method == 'd':      # Delete all network configurations for affected interface definitions
                     remove_interface_all_configs(interface)
-                    apply_configuration(interface, config)
+                    apply_configuration(interface)
                 elif clean_up_method == 'i':      # Interactively select the configuration file to keep
                     print(f"Conflicting netplan configurations found for interface '{interface}':")
                     # get the index (number) and filename of the unique files containing specific network interface configuration details
@@ -500,24 +514,11 @@ def clean_up_conflicts(conflicts):
                                 break
                         except ValueError:
                             print("Invalid input. Please enter a number.")
-                        apply_configuration(interface, config)
+                        apply_configuration(interface)
         else:
             print(f"No conflicting configurations found for {interface}")
 
-# Apply the configuration 
-def apply_configuration(interface, config):
-    config_path = f"{config_dir}/{interface}.yaml"
 
-    if not remove_interface_all_configs(interface):
-        print(f"No existing configuration found for {interface}. Proceeding with new configuration.")
-
-    try:
-        with open(config_path, "w") as file:
-            file.write(config)
-        subprocess.run(["netplan", "try"], check=True)
-        subprocess.run(["netplan", "apply"], check=True)
-    except Exception as e:
-        logging.error(f"An error occurred while applying the configuration: {e}")
 
 # Define new interface configuration by validating supplied interface is in list of currently used network interfaces:
 def new_interface(interface, interfaces):
