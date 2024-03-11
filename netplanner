@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# Last modified: 2024-02-01
-version = 20240201001
+# Last modified: 2024-03-11
+version = 2024031101
 import subprocess
 import ipaddress
 import os
@@ -217,8 +217,12 @@ def get_network_details(interfaces,interface=None):
                         break
 
                 while True:
-                    gateway = input("Enter the gateway address: ")
-                    if not validate_ip(gateway):
+                    gateway = ""
+                    gateway = input("Enter the gateway address (blank for local connection only): ")
+                    if gateway == "":
+                        logging.info("No gateway defined")
+                        break
+                    elif not validate_ip(gateway):
                         logging.error("Invalid gateway address. Please try again.")
                         continue
                     else:
@@ -226,14 +230,16 @@ def get_network_details(interfaces,interface=None):
 
                 # dns_input = input("Enter DNS addresses (comma-separated, hit enter if none): ")
                 # dns = [dns.strip() for dns in dns_input.split(',') if validate_ip(dns.strip())]
-                
+                # SKIP DNS if no gateway defined
+                ips = []
+                dns = []
                 while True:
+                    if gateway == "":
+                        break
                     dns_input = input("Enter DNS addresses (comma-separated, hit enter if none or done): ")
                     if dns_input.lower().strip() in ['done', '']:
                         break
                     else:
-                        ips = []
-                        dns = []
                         # Split the input and validate each IP address
                         for ip in dns_input.split(','):
                             ips.append(ip.strip())
@@ -259,13 +265,24 @@ def get_network_details(interfaces,interface=None):
 # Generate a new netplan configuration, based on interface name, configuration type, CIDR, gateway, DNS address, and MTU:
 def generate_netplan_config(iface, config_type, ip_cidr, gateway, dns, mtu):
     mtu_config = f"mtu: {mtu}" if mtu else ""
-    if config_type == "static":
+    if ((config_type == "static") and (gateway == "")):
+        config = f"""network:
+  version: 2
+  ethernets:
+    {iface}:
+      dhcp4: no
+      dhcp6: no
+      addresses: [{ip_cidr}]
+      {mtu_config}
+"""
+    elif config_type == "static":
         dns_entries = ", ".join(dns)
         config = f"""network:
   version: 2
   ethernets:
     {iface}:
       dhcp4: no
+      dhcp6: no
       addresses: [{ip_cidr}]
       gateway4: {gateway}
       nameservers:
@@ -278,6 +295,7 @@ def generate_netplan_config(iface, config_type, ip_cidr, gateway, dns, mtu):
   ethernets:
     {iface}:
       dhcp4: yes
+      dhcp6: no
       {mtu_config}
 """
     else:  # config_type == "none"
@@ -286,6 +304,7 @@ def generate_netplan_config(iface, config_type, ip_cidr, gateway, dns, mtu):
   ethernets:
     {iface}:
       dhcp4: no
+      dhcp6: no
       {mtu_config}
 """
     return config
@@ -406,20 +425,6 @@ def list_files_with_interface(interface_name):
     
     return matching_files
 
-# Apply the configuration 
-def apply_configuration(interface, config=None):
-    config_path = f"{config_dir}/{interface}.yaml"
-    if not config == None:
-        with open(config_path, "w") as file:
-            file.write(config)
-    if not remove_interface_all_configs(interface):
-        print(f"No existing configuration found for {interface}. Proceeding with new configuration.")
-    try:
-        subprocess.run(["netplan", "try"], check=True)
-        subprocess.run(["netplan", "apply"], check=True)
-    except Exception as e:
-        logging.error(f"An error occurred while applying the configuration: {e}")
-
 # Display all configuration data within a specific file:
 def display_config(config, filename):
     # Display the interface configuration
@@ -492,7 +497,7 @@ def clean_up_conflicts(conflicts):
                     new_interface(interface, interfaces)
                 elif clean_up_method == 'd':      # Delete all network configurations for affected interface definitions
                     remove_interface_all_configs(interface)
-                    apply_configuration(interface)
+                    apply_configuration(interface, config)
                 elif clean_up_method == 'i':      # Interactively select the configuration file to keep
                     print(f"Conflicting netplan configurations found for interface '{interface}':")
                     # get the index (number) and filename of the unique files containing specific network interface configuration details
@@ -514,11 +519,24 @@ def clean_up_conflicts(conflicts):
                                 break
                         except ValueError:
                             print("Invalid input. Please enter a number.")
-                        apply_configuration(interface)
+                        apply_configuration(interface, config)
         else:
             print(f"No conflicting configurations found for {interface}")
 
+# Apply the configuration 
+def apply_configuration(interface, config):
+    config_path = f"{config_dir}/{interface}.yaml"
 
+    if not remove_interface_all_configs(interface):
+        print(f"No existing configuration found for {interface}. Proceeding with new configuration.")
+
+    try:
+        with open(config_path, "w") as file:
+            file.write(config)
+        subprocess.run(["netplan", "try"], check=True)
+        subprocess.run(["netplan", "apply"], check=True)
+    except Exception as e:
+        logging.error(f"An error occurred while applying the configuration: {e}")
 
 # Define new interface configuration by validating supplied interface is in list of currently used network interfaces:
 def new_interface(interface, interfaces):
