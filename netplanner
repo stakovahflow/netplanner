@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# Last modified: 2024-03-11
-version = 2024031101
+# Last modified: 2024-01-21 @ 19:27 (EST)
+version = 20240311001
 import subprocess
 import ipaddress
 import os
@@ -135,7 +135,7 @@ def validate_ip(ip):
         logging.debug(f'IP Address {ip}: Valid')
         return True
     except ipaddress.AddressValueError:
-        logging.error(f'IP Address {ip}: INVALID')
+        logging.error(f'IP Address {ip}: Invalid')
         return False
 
 # Pretty much as it sounds, we're getting the interface details for the specified interface, validated per list of currently used interface names
@@ -217,12 +217,8 @@ def get_network_details(interfaces,interface=None):
                         break
 
                 while True:
-                    gateway = ""
-                    gateway = input("Enter the gateway address (blank for local connection only): ")
-                    if gateway == "":
-                        logging.info("No gateway defined")
-                        break
-                    elif not validate_ip(gateway):
+                    gateway = input("Enter the gateway address: ")
+                    if not validate_ip(gateway):
                         logging.error("Invalid gateway address. Please try again.")
                         continue
                     else:
@@ -230,28 +226,22 @@ def get_network_details(interfaces,interface=None):
 
                 # dns_input = input("Enter DNS addresses (comma-separated, hit enter if none): ")
                 # dns = [dns.strip() for dns in dns_input.split(',') if validate_ip(dns.strip())]
-                # SKIP DNS if no gateway defined
-                ips = []
+                
                 dns = []
                 while True:
-                    if gateway == "":
-                        break
                     dns_input = input("Enter DNS addresses (comma-separated, hit enter if none or done): ")
-                    if dns_input.lower().strip() in ['done', '']:
+                    if dns_input.lower() in ['done', '']:
                         break
                     else:
                         # Split the input and validate each IP address
-                        for ip in dns_input.split(','):
-                            ips.append(ip.strip())
-                        for ip in ips:
-                            if validate_ip(ip):
-                                dns.append(ip)
-                            else:
-                                logging.debug('Restarting DNS entry prompt')
-                                continue
-                        logging.info(f"Current valid DNS IPs: {dns}")
-                        if ips == dns:
-                            break
+                        ips = [ip.strip() for ip in dns_input.split(',')]
+                        valid_ips = [ip for ip in ips if validate_ip(ip)]
+                        if valid_ips:
+                            dns.extend(valid_ips)
+                        else:
+                            logging.error("Invalid IP address(es) detected.")
+                        loggging.error(f"Current valid DNS IPs: {dns}")
+                
                 return iface, config_type, ip_cidr, gateway, dns, mtu
             else:
                 return iface, config_type, None, None, None, mtu
@@ -265,24 +255,13 @@ def get_network_details(interfaces,interface=None):
 # Generate a new netplan configuration, based on interface name, configuration type, CIDR, gateway, DNS address, and MTU:
 def generate_netplan_config(iface, config_type, ip_cidr, gateway, dns, mtu):
     mtu_config = f"mtu: {mtu}" if mtu else ""
-    if ((config_type == "static") and (gateway == "")):
-        config = f"""network:
-  version: 2
-  ethernets:
-    {iface}:
-      dhcp4: no
-      dhcp6: no
-      addresses: [{ip_cidr}]
-      {mtu_config}
-"""
-    elif config_type == "static":
+    if config_type == "static":
         dns_entries = ", ".join(dns)
         config = f"""network:
   version: 2
   ethernets:
     {iface}:
       dhcp4: no
-      dhcp6: no
       addresses: [{ip_cidr}]
       gateway4: {gateway}
       nameservers:
@@ -295,7 +274,6 @@ def generate_netplan_config(iface, config_type, ip_cidr, gateway, dns, mtu):
   ethernets:
     {iface}:
       dhcp4: yes
-      dhcp6: no
       {mtu_config}
 """
     else:  # config_type == "none"
@@ -304,7 +282,6 @@ def generate_netplan_config(iface, config_type, ip_cidr, gateway, dns, mtu):
   ethernets:
     {iface}:
       dhcp4: no
-      dhcp6: no
       {mtu_config}
 """
     return config
