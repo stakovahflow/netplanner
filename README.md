@@ -273,9 +273,20 @@ Please note that this is beta software. Use at your own risk!
   Configuration applied for eno2.
   ```
 
+***Remove Specific Network Interface from All Netplan Configurations:***
+
+  $ `sudo ./netplanner --remove --interface eno2`
+  ```Backing up /etc/netplan to /var/log/netplan-backup-2024-03-12_23-29-18.tgz
+  Backup created: /var/log/netplan-backup-2024-03-12_23-29-18.tgz
+  To restore this configuration, run: sudo ./netplanner --restore /var/log/netplan-backup-2024-03-12_23-29-18.tgz
+  
+  Removed configuration for eno2 from /etc/netplan/eno2.yaml
+  Removed almost blank configuration file: eno2.yaml
+  ```
+
 ***Remove All Netplan Configurations:***
 
-  $ `sudo ./netplanner --remove`
+  $ `sudo ./netplanner --remove --interface all`
   ```
   
   ```
