@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# Last modified: 2024-03-12 @ 23:27 (EDT)
-version = 20240312003
+# Last modified: 2024-03-12 @ 23:59 (EDT)
+version = 20240312004
 import subprocess
 import ipaddress
 import os
@@ -587,9 +587,11 @@ def main():
             return
         
         if args.version:
+            # Display version number and exit:
             logging.info(f'{application_name} version number: {version}')
             exit(0)
         elif args.list:
+            # list available interfaces:
             logging.debug("Listing interface configurations: ")
             i = 0
             for interface in get_interfaces():
@@ -597,14 +599,17 @@ def main():
                 i+=1
             exit(0)
         elif args.view:
+            # Exactly like it sounds. Show netplan configurations:
             logging.debug("View interface configuration: ")
             view_netplan_configs()
             exit(0)
         elif args.backup:
+            # Create a backup of all netplan configs:
             logging.info(f"Backing up netplan configuration files")
             backup_interface_configurations()
             exit(0)
         elif args.sanity:
+            # Look for conflicts:
             logging.debug("Looking for conflicting interface configuration entries")
             conflicts = sanity_check()
             for iface, files in conflicts.items():
@@ -613,6 +618,7 @@ def main():
                     for conflict_file in files:
                         logging.info(f"  - {conflict_file}")
         elif args.restore:
+            # Allow user to restore netplan confuration from backup:
             try:
                 filename = args.restore
                 logging.info(f"Restoring netplan configuration files")
@@ -624,6 +630,7 @@ def main():
                 logging.error(e)
         
         elif args.remove:
+            # Need to require an interface for removal:
             if not args.interface:
                 logging.error(f"Interface not defined. Please specify interface '--interface eth1', etc.")
                 exit(1)
@@ -634,6 +641,7 @@ def main():
             exit(0)
 
         elif args.clean:
+            # Clean duplicate interface definitions:
             backup_interface_configurations()
             logging.debug("Cleaning interface configuration: ")
             clean_up_netplan_configs()
@@ -643,6 +651,7 @@ def main():
             exit(0)
 
         else:
+            # Default to adding a new interface definition:
             print('Top level function not selected.')
             new_interface(interface, interfaces)
             
