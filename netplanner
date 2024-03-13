@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# Last modified: 2024-01-21 @ 19:27 (EST)
-version = 20240311001
+# Last modified: 2024-03-12 @ 23:27 (EDT)
+version = 20240312003
 import subprocess
 import ipaddress
 import os
@@ -624,6 +624,9 @@ def main():
                 logging.error(e)
         
         elif args.remove:
+            if not args.interface:
+                logging.error(f"Interface not defined. Please specify interface '--interface eth1', etc.")
+                exit(1)
             backup_interface_configurations()
             logging.debug(f"Removing interface {interface} configuration: ")
             remove_interface_all_configs(interface)
