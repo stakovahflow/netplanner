@@ -1,6 +1,32 @@
 Please note that this is beta software. Use at your own risk!
 
-***Help:***
+# Logging:
+
+All changes should be logged to: `/var/log/netplanner.log`
+
+To view, run `less /var/log/netplanner.log`
+```
+  2024-03-12 23:38:08,301 - DEBUG - Getting IP address for interface eno2 from stdin
+  2024-03-12 23:38:19,151 - DEBUG - IP Address 192.168.254.253: Valid
+  2024-03-12 23:38:20,591 - DEBUG - Interface CIDR: Valid
+  2024-03-12 23:38:26,523 - INFO - No gateway defined
+  2024-03-12 23:38:26,523 - DEBUG - ['Received settings for netplan configuration: eno2, static, 192.168.254.253/24, , [], 1280']
+  2024-03-12 23:38:26,523 - INFO - Generated configuration:
+  
+  2024-03-12 23:38:26,523 - INFO - network:
+    version: 2
+    ethernets:
+      eno2:
+        dhcp4: no
+        dhcp6: no
+        addresses: [192.168.254.253/24]
+        mtu: 1280
+  
+  2024-03-12 23:38:28,366 - INFO - Attempting to remove any unnecessary netplan configuration files:
+  2024-03-12 23:38:28,374 - INFO - Removed configuration for eno2 from /etc/netplan/eno2.yaml
+```
+
+# Help:
 
 ```
   usage: netplanner [-h] [-V] [-v] [-l] [-i INTERFACE] [-g] [-r] [-c] [--backup]
@@ -22,9 +48,9 @@ Please note that this is beta software. Use at your own risk!
     -s, --sanity          Perform sanity-check on netplan configurations
 ```
 
-**Examples:**
+# Examples:
 
-***View Interface Configuration***
+## ***View Interface Configuration***
 
   $ `sudo ./netplanner -v`
   ```
@@ -50,7 +76,7 @@ Please note that this is beta software. Use at your own risk!
         addresses: [192.168.254.253/30]
    ```   
 
-***Netplan Configuration Backup:***  
+## ***Netplan Configuration Backup:***  
 
   $ `sudo ./netplanner --backup`
   ```
@@ -60,7 +86,7 @@ Please note that this is beta software. Use at your own risk!
   To restore this configuration, run: sudo ./netplanner --restore /var/log/netplan-backup-2024-03-12_22-13-16.tgz
   ```
 
-***Netplan Configuration Restore:***
+## ***Netplan Configuration Restore:***
 
   $ `sudo ./netplanner --restore /var/log/netplan-backup-2024-03-12_22-13-16.tgz`
   ```
@@ -69,7 +95,7 @@ Please note that this is beta software. Use at your own risk!
   Backup restored: /var/log/netplan-backup-2024-03-12_22-13-16.tgz
   ```
 
-***Static IP Address Configuration:***
+## ***Static IP Address Configuration:***
 
   $ `sudo ./netplanner`
   ```
@@ -135,7 +161,7 @@ Please note that this is beta software. Use at your own risk!
   Configuration applied for eno1.
   ```
 
-***Static IP Address for Local Network Only:***
+## ***Static IP Address for Local Network Only:***
 
   $ `sudo ./netplanner`
   ```
@@ -194,7 +220,7 @@ Please note that this is beta software. Use at your own risk!
   Configuration applied for eno2.
   ```
 
-***DHCP IP Address Configuration:***
+## ***DHCP IP Address Configuration:***
 
   $ `sudo ./netplanner`
   ```
@@ -233,7 +259,7 @@ Please note that this is beta software. Use at your own risk!
   Configuration applied for eno2.
   ```
 
-***No IP address (network monitoring):***
+## ***No IP address (network monitoring):***
 
   $ `sudo ./netplanner`
   ```
@@ -273,7 +299,7 @@ Please note that this is beta software. Use at your own risk!
   Configuration applied for eno2.
   ```
 
-***Remove Specific Network Interface from All Netplan Configurations:***
+## ***Remove Specific Network Interface from All Netplan Configurations:***
 
   $ `sudo ./netplanner --remove --interface eno2`
   ```Backing up /etc/netplan to /var/log/netplan-backup-2024-03-12_23-29-18.tgz
@@ -284,14 +310,14 @@ Please note that this is beta software. Use at your own risk!
   Removed almost blank configuration file: eno2.yaml
   ```
 
-***Remove All Netplan Configurations:***
+## ***Remove All Netplan Configurations:***
 
   $ `sudo ./netplanner --remove --interface all`
   ```
   
   ```
 
-***Clean Duplicate Interface Configuration:***
+## ***Clean Duplicate Interface Configuration:***
 
   $ `sudo ./netplanner --clean`
   ```
